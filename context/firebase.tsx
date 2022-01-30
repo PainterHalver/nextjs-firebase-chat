@@ -1,15 +1,7 @@
 import { initializeApp, FirebaseApp } from "firebase/app";
 import { getAuth, User } from "firebase/auth";
 import { Firestore, getFirestore } from "firebase/firestore";
-import {
-  Children,
-  ComponentProps,
-  createContext,
-  Reducer,
-  useContext,
-  useEffect,
-  useReducer,
-} from "react";
+import { createContext, useContext, useEffect, useReducer } from "react";
 
 const firebaseConfig = {
   apiKey: "AIzaSyChHzyWZAd1y1WlpJd1vmmmuGRIozG_bmQ",
@@ -82,9 +74,15 @@ export default function FirebaseProvider({
   };
 
   useEffect(() => {
-    getAuth(app).onAuthStateChanged(function (user) {
+    getAuth(app).onAuthStateChanged(async function (user) {
       if (user) {
-        dispatch("LOG_IN", getAuth(app).currentUser);
+        const { currentUser } = getAuth(app);
+        // await setDoc(doc(db, "users", currentUser.uid), {
+        //   name: currentUser.displayName,
+        //   uid: currentUser.uid,
+        //   photoUrl: currentUser.photoURL,
+        // });
+        dispatch("LOG_IN", currentUser);
       } else {
         dispatch("LOG_OUT");
       }

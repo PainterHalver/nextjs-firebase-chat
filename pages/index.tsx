@@ -1,21 +1,26 @@
-import { initializeApp } from "firebase/app";
 import { getAuth, signOut } from "firebase/auth";
 import {
-  getFirestore,
   collection,
-  setDoc,
-  doc,
-  QuerySnapshot,
-  getDocs,
-  DocumentReference,
   addDoc,
   Timestamp,
+  Query,
+  query,
+  CollectionReference,
+  orderBy,
+  limit,
 } from "firebase/firestore";
 import { NextPage } from "next";
 import Image from "next/image";
-import Router, { useRouter } from "next/router";
-import React, { FormEvent, FormEventHandler, useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import React, {
+  FormEvent,
+  FormEventHandler,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useFirebaseContext } from "../context/firebase";
+import { useCollectionData } from "react-firebase-hooks/firestore";
 
 const Home: NextPage = () => {
   const router = useRouter();
@@ -23,7 +28,16 @@ const Home: NextPage = () => {
   const auth = getAuth(app);
 
   const [messageValue, setMessageValue] = useState("");
-  const [messages, setMessages] = useState([]);
+
+  const messageRef: CollectionReference = collection(db, "messages");
+  const q: Query = query(messageRef, orderBy("createdAt", "desc"), limit(25));
+  const [messages, loading, error, snapshot] = useCollectionData(q);
+
+  const lastBlock = useRef(null);
+
+  useEffect(() => {
+    lastBlock.current.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   useEffect(() => {
     auth.onAuthStateChanged(function (user) {
@@ -31,12 +45,6 @@ const Home: NextPage = () => {
         router.push("/login");
       }
     });
-
-    (async () => {
-      const querySnapshot = await getDocs(collection(db, "messages"));
-      console.log(querySnapshot.docs);
-      setMessages(querySnapshot.docs.map((doc) => doc.data()));
-    })();
   }, []);
 
   const signOutHandler = () => {
@@ -58,7 +66,9 @@ const Home: NextPage = () => {
         message: messageValue,
         createdAt: Timestamp.now(),
         uid: user.uid,
+        photoUrl: user.photoURL,
       });
+      setMessageValue("");
       console.log("Document written with ID: ", docRef.id);
     } catch (e) {
       console.error("Error adding document: ", e);
@@ -84,68 +94,43 @@ const Home: NextPage = () => {
         <div className="m-1 overflow-y-scroll bg-orange-300 grow no-scrollbar">
           {/* Chat rows */}
           {user &&
-            messages.map((msg) =>
-              msg.uid === user.uid ? (
-                <div className="flex justify-end w-full p-1 mt-1 bg-red-300">
-                  <p className="max-w-md px-2 py-1 mr-2 break-words bg-gray-400 rounded">
-                    {msg.message}
-                  </p>
-                  <div>
-                    <Image
-                      src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
-                      width={37}
-                      height={37}
-                      className="rounded-full"
-                    ></Image>
+            messages &&
+            !loading &&
+            messages
+              .slice(0)
+              .reverse()
+              .map((msg, index) =>
+                msg.uid === user.uid ? (
+                  <div className="flex justify-end w-full p-1 mt-1" key={index}>
+                    <p className="max-w-md px-2 py-1 mr-2 break-words bg-gray-400 rounded">
+                      {msg.message}
+                    </p>
+                    <div>
+                      <Image
+                        src={msg.photoUrl}
+                        width={37}
+                        height={37}
+                        className="rounded-full"
+                      ></Image>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="flex w-full p-1 mt-1 bg-red-300">
-                  <div>
-                    <Image
-                      src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
-                      width={37}
-                      height={37}
-                      className="rounded-full"
-                    ></Image>
+                ) : (
+                  <div className="flex w-full p-1 mt-1" key={index}>
+                    <div>
+                      <Image
+                        src={msg.photoUrl}
+                        width={37}
+                        height={37}
+                        className="rounded-full"
+                      ></Image>
+                    </div>
+                    <p className="max-w-md px-2 py-1 ml-2 break-words bg-gray-400 rounded">
+                      {msg.message}
+                    </p>
                   </div>
-                  <p className="max-w-md px-2 py-1 ml-2 break-words bg-gray-400 rounded">
-                    {msg.message}
-                  </p>
-                </div>
-              )
-            )}
-          {/* Other */}
-          <div className="flex w-full p-1 mt-1 bg-red-300">
-            <div>
-              <Image
-                src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
-                width={37}
-                height={37}
-                className="rounded-full"
-              ></Image>
-            </div>
-            <p className="max-w-md px-2 py-1 ml-2 break-words bg-gray-400 rounded">
-              asdf asdfhjk h khgjka sg asvhjdg ahjsv vasjh vasjh dvjahskd bdksjb
-              bsadf bsdhb hbasd jhbasdjfhb kjads
-            </p>
-          </div>
-
-          {/* Me */}
-          <div className="flex justify-end w-full p-1 mt-1 bg-red-300">
-            <p className="max-w-md px-2 py-1 mr-2 break-words bg-gray-400 rounded">
-              asdf asdfhjk h khgjka sg asvhjdg ahjsv vasjh vasjh dvjahskd bdksjb
-              bsadf bsdhb hbasd jhbasdjfhb kjads
-            </p>
-            <div>
-              <Image
-                src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
-                width={37}
-                height={37}
-                className="rounded-full"
-              ></Image>
-            </div>
-          </div>
+                )
+              )}
+          <div ref={lastBlock}></div>
         </div>
         {/* Text Input */}
         <div className="w-full py-2 bg-gray-400">

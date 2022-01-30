@@ -1,17 +1,9 @@
-import {
-  Auth,
-  getAuth,
-  GoogleAuthProvider,
-  OAuthCredential,
-  signInWithPopup,
-} from "firebase/auth";
-import { doc, DocumentReference } from "firebase/firestore";
-import { GetServerSideProps } from "next";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useRouter } from "next/router";
 import { useDispatchContext, useFirebaseContext } from "../context/firebase";
 
 export default function Login() {
-  const { app, authenticated, user, db } = useFirebaseContext();
+  const { app, authenticated } = useFirebaseContext();
   const dispatch = useDispatchContext();
   const router = useRouter();
 
