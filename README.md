@@ -1,8 +1,8 @@
-(https://nextjs-firebase-chat.vercel.app/)[https://nextjs-firebase-chat.vercel.app/]
+https://nextjs-firebase-chat.vercel.app/
 
 # Aim:
 
-- order and limit data fireship (docs)[https://firebase.google.com/docs/firestore/query-data/order-limit-data?authuser=0#order_and_limit_data])
+- order and limit data fireship [https://firebase.google.com/docs/firestore/query-data/order-limit-data?authuser=0#order_and_limit_data])
 - re(render) with firestore updates
 - firebase google authentication
 
