@@ -5,12 +5,13 @@ import {
   OAuthCredential,
   signInWithPopup,
 } from "firebase/auth";
+import { doc, DocumentReference } from "firebase/firestore";
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
 import { useDispatchContext, useFirebaseContext } from "../context/firebase";
 
 export default function Login() {
-  const { app, authenticated, user } = useFirebaseContext();
+  const { app, authenticated, user, db } = useFirebaseContext();
   const dispatch = useDispatchContext();
   const router = useRouter();
 
@@ -32,14 +33,11 @@ export default function Login() {
         // The signed-in user info.
         const user = result.user;
         dispatch("LOG_IN", user);
+        router.push("/");
       })
       .catch((error) => {
         console.log(error);
       });
-  };
-
-  const showUser = () => {
-    console.log(user);
   };
 
   return authenticated ? (
@@ -51,12 +49,6 @@ export default function Login() {
         className="p-1 bg-gray-400 border-2 border-gray-500 rounded"
       >
         Sign in with Google
-      </button>
-      <button
-        onClick={showUser}
-        className="p-1 bg-gray-400 border-2 border-gray-500 rounded"
-      >
-        Show user
       </button>
     </div>
   );
